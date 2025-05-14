@@ -23,7 +23,7 @@ app.get('/check', async (req, res) => {
       timeout: 30000
     });
 
-    // Chờ kết quả xuất hiện (tối đa 20 giây)
+    // Chờ kết quả xuất hiện bằng XPath (tối đa 20 giây)
     const timeout = 20000;
     const pollInterval = 1000;
     const start = Date.now();
@@ -31,9 +31,10 @@ app.get('/check', async (req, res) => {
 
     while (Date.now() - start < timeout) {
       try {
-        const elHandle = await page.$('.analyze-page_type__q75_m');
+        const [elHandle] = await page.$x("//div[contains(text(), 'An toàn') or contains(text(), 'Nguy hiểm') or contains(text(), 'Chưa')]");
         if (elHandle) {
           statusText = await page.evaluate(el => el.innerText.trim(), elHandle);
+          console.log('Kết quả raw:', statusText);
           break;
         }
       } catch (e) {}
@@ -47,7 +48,7 @@ app.get('/check', async (req, res) => {
       status = 'An toàn ✅';
     } else if (/nguy hiểm|lừa đảo/i.test(statusText)) {
       status = 'Nguy hiểm ⚠️';
-    } else if (/chưa có thông tin|không xác định/i.test(statusText)) {
+    } else if (/chưa có thông tin|không xác định|chưa được đánh giá/i.test(statusText)) {
       status = 'Chưa được đánh giá 🔍';
     }
 
