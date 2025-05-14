@@ -3,12 +3,12 @@ const puppeteer = require('puppeteer-core');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Chromium path for Alpine (Railway)
+// Đường dẫn Chromium phù hợp Railway (Alpine Linux)
 const chromiumPath = '/usr/bin/chromium-browser';
 
 app.get('/check', async (req, res) => {
   const url = req.query.url;
-  if (!url) return res.status(400).json({ error: 'Missing ?url=' });
+  if (!url) return res.status(400).json({ error: 'Thiếu ?url=' });
 
   try {
     const browser = await puppeteer.launch({
@@ -31,14 +31,12 @@ app.get('/check', async (req, res) => {
 
     while (Date.now() - start < timeout) {
       try {
-        const elHandle = await page.$('.result-content');
+        const elHandle = await page.$('.analyze-page_type__q75_m');
         if (elHandle) {
-          statusText = await page.evaluate(el => el.innerText, elHandle);
+          statusText = await page.evaluate(el => el.innerText.trim(), elHandle);
           break;
         }
-      } catch (e) {
-        // ignore
-      }
+      } catch (e) {}
       await new Promise(r => setTimeout(r, pollInterval));
     }
 
@@ -61,9 +59,9 @@ app.get('/check', async (req, res) => {
 });
 
 app.get('/', (req, res) => {
-  res.send('Puppeteer-Core API ✅');
+  res.send('Puppeteer API đang chạy ✅');
 });
 
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log(`Server chạy tại cổng ${PORT}`);
 });
