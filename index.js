@@ -19,15 +19,28 @@ app.get('/check', async (req, res) => {
 
     const page = await browser.newPage();
     await page.goto(`https://chongluadao.vn/analyze?url=${encodeURIComponent(url)}`, {
-      waitUntil: 'networkidle2',
-      timeout: 20000
+      waitUntil: 'domcontentloaded',
+      timeout: 30000
     });
 
-    await page.waitForSelector('.result-content', { timeout: 10000 });
-    const statusText = await page.evaluate(() => {
-      const el = document.querySelector('.result-content');
-      return el ? el.innerText : null;
-    });
+    // Chờ kết quả xuất hiện (tối đa 20 giây)
+    const timeout = 20000;
+    const pollInterval = 1000;
+    const start = Date.now();
+    let statusText = null;
+
+    while (Date.now() - start < timeout) {
+      try {
+        const elHandle = await page.$('.result-content');
+        if (elHandle) {
+          statusText = await page.evaluate(el => el.innerText, elHandle);
+          break;
+        }
+      } catch (e) {
+        // ignore
+      }
+      await new Promise(r => setTimeout(r, pollInterval));
+    }
 
     await browser.close();
 
